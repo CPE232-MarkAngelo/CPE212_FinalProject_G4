@@ -1,0 +1,40 @@
+# Ansible Playbook to Build Docker Image
+---
+- name: Build and Deploy Docker Image
+  hosts: all
+  become: yes
+  vars:
+    image_name: group4_app
+
+  tasks:
+    - name: Ensure Docker is installed
+      ansible.builtin.package:
+        name: docker
+        state: present
+
+    - name: Start Docker service
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Copy Docker directory to target
+      ansible.builtin.copy:
+        src: /home/ma_localmachine/CPE212_FinalProject_G4/Docker/
+        dest: /tmp/Docker/
+        remote_src: no
+
+
+    - name: Copy application files to target
+      ansible.builtin.copy:
+        src: /home/ma_localmachine/CPE212_FinalProject_G4/Docker/
+        dest: /tmp/
+        remote_src: no
+
+    - name: Build Docker image
+      community.docker.docker_image:
+        name: "{{ image_name }}"
+        source: build
+        build:
+          path: /tmp
+
