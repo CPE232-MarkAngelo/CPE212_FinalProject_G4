@@ -1,0 +1,69 @@
+# ansible playbook to build docker image on CentOS # 
+---
+- name: Build and Deploy Docker Image on CentOS 9
+  hosts: CentOS
+  become: yes
+  vars:
+    image_name: group4_app
+
+  tasks:
+    - name: Uninstall podman-docker to avoid conflicts
+      ansible.builtin.yum:
+        name: podman-docker
+        state: absent
+      ignore_errors: yes  
+
+    - name: Install required dependencies
+      ansible.builtin.yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+          - python3-pip  
+        state: present
+
+    - name: Add Docker repository
+      ansible.builtin.yum_repository:
+        name: docker-ce-stable
+        description: Docker CE Stable Repository
+        baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+        enabled: yes
+        gpgcheck: yes
+        gpgkey: https://download.docker.com/linux/centos/gpg
+
+    - name: Install Docker 
+      ansible.builtin.yum:
+        name: docker-ce
+        state: present
+
+    - name: Install Docker SDK for Python
+      ansible.builtin.pip:
+        name: docker
+        state: present
+        executable: /usr/bin/pip3  
+
+    - name: Ensure Docker service is started and enabled
+      ansible.builtin.systemd:
+        name: docker 
+        state: started
+        enabled: yes
+
+    - name: Copy Docker directory to target
+      ansible.builtin.copy:
+        src: /home/ma_localmachine/CPE212_FinalProject_G4/Docker/
+        dest: /tmp/Docker/
+        remote_src: no
+
+    - name: Copy application files to target
+      ansible.builtin.copy:
+        src: /home/ma_localmachine/CPE212_FinalProject_G4/Docker/
+        dest: /tmp/
+        remote_src: no
+
+    - name: Build Docker image
+      community.docker.docker_image:
+        name: "{{ image_name }}"
+        source: build
+        build:
+          path: /tmp
+

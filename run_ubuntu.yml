@@ -1,0 +1,27 @@
+# ansible playbook to run the docker images on Ubuntu #
+---
+  - name: Run Docker Container
+    hosts: Ubuntu
+    become: yes
+    vars:
+      image_name: group4_app
+
+    tasks:
+      - name: Ensure Docker is installed
+        ansible.builtin.package:
+          name: docker
+          state: present
+
+      - name: Start Docker service
+        ansible.builtin.service:
+          name: docker
+          state: started
+          enabled: yes
+
+      - name: Run the Docker container
+        community.docker.docker_container:
+          name: group4_web_app
+          image: "{{ image_name }}"
+          state: started
+          ports:
+            - "8090:5000"

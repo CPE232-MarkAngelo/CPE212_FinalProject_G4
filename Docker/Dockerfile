@@ -1,7 +1,7 @@
 # Base image
 FROM python:3.9-slim
 
-# Set working directory
+# Working directory
 WORKDIR /app
 
 # Copy application files
@@ -10,11 +10,10 @@ COPY templates/ /app/templates/
 COPY static/ /app/static/
 COPY requirements.txt /app/
 
-
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose application port
+# Application port
 EXPOSE 5000
 
 # Run the application 

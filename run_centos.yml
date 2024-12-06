@@ -1,0 +1,58 @@
+# ansible playbook to run the docker images on centos #
+---
+- name: Run Docker Container on CentOS 9
+  hosts: CentOS
+  become: yes
+  vars:
+    image_name: group4_app
+
+  tasks:
+    - name: Uninstall podman-docker to avoid conflicts
+      ansible.builtin.yum:
+        name: podman-docker
+        state: absent
+      ignore_errors: yes  
+
+    - name: Install required dependencies
+      ansible.builtin.yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+          - python3-pip  
+        state: present
+
+    - name: Add Docker repository
+      ansible.builtin.yum_repository:
+        name: docker-ce-stable
+        description: Docker CE Stable Repository
+        baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+        enabled: yes
+        gpgcheck: yes
+        gpgkey: https://download.docker.com/linux/centos/gpg
+
+    - name: Install Docker CE (Community Edition)
+      ansible.builtin.yum:
+        name: docker-ce
+        state: present
+
+    - name: Install Docker SDK for Python
+      ansible.builtin.pip:
+        name: docker
+        state: present
+        executable: /usr/bin/pip3  
+
+    - name: Start Docker service
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Run the Docker container
+      community.docker.docker_container:
+        name: group4_web_app
+        image: "{{ image_name }}"
+        state: started
+        ports:
+          - "8090:5000"
+
